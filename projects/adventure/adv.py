@@ -22,8 +22,65 @@ world.printRooms()
 player = Player("Name", world.startingRoom)
 
 # Fill this out
-traversalPath = []
 
+oppositeDirs = {'n': 's', 's': 'n', 'e': 'w', 'w': 'e'}
+traversalPath =[] # fill this out with directions that traverse the whole graph
+graph = {}
+
+def makeQuestions():
+    graph[player.currentRoom.id] = {}
+    for exit in player.currentRoom.getExits():
+        graph[player.currentRoom.id][exit] = '?'
+    # print (graph)
+
+
+def getPossibleDirections():
+    availableExits = []
+    exits = player.currentRoom.getExits()
+    # print('exits', exits)
+    if len(exits) > 0: # makes sure there is at least 1 exit in room
+        for exit in player.currentRoom.getExits():
+            # print('exit', exit)
+            if graph[player.currentRoom.id][exit] == '?':
+                availableExits.append(exit)
+        if len(availableExits) > 0:
+            if len(availableExits) == 1:
+                return availableExits[0]
+            elif len(availableExits) == 2:
+                return availableExits[random.randint(0,1)]
+            elif len(availableExits) == 3:
+                return availableExits[random.randint(0,2)]
+            elif len(availableExits) == 4:
+                return availableExits[random.randint(0,3)]
+    return None
+
+
+def traverseRooms():
+    makeQuestions()
+    q = []
+    visited = set()
+    visited.add(world.startingRoom.id) # starting point is always root so can be added right away (saves some moves)
+    while len(visited) != len(roomGraph):
+        previousRoom = player.currentRoom.id
+        availableExits = getPossibleDirections()
+        player.travel(availableExits)
+        traversalPath.append(availableExits)
+        q.append(availableExits)
+        if player.currentRoom.id not in visited:
+            visited.add(player.currentRoom.id)
+            makeQuestions()
+        graph[previousRoom][availableExits] = player.currentRoom.id
+        # print('room',player.currentRoom.id)
+        graph[player.currentRoom.id][oppositeDirs[availableExits]] = previousRoom
+        # print(previousRoom)
+        while getPossibleDirections() == None and len(q) > 0:
+            player.travel(oppositeDirs[q[-1]])
+            traversalPath.append(oppositeDirs[q[-1]])
+            q.pop()
+    # print('visited', visited)
+
+
+traverseRooms()
 
 
 # TRAVERSAL TEST
